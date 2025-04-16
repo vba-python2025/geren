@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>全功能文档工具箱 - @逆流锋刀</title>
+    <title>PDF全能工具箱 - 八大功能版</title>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -13,76 +13,73 @@
         body {
             font-family: 'Segoe UI', system-ui;
             margin: 0;
-            padding: 20px 15px 70px;
+            padding: 20px 15px 100px;
             background: var(--background-color);
             min-height: 100vh;
         }
 
-        /* 网格容器 */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* 功能卡片 */
         .function-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 20px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
+            min-height: 220px;
         }
 
         .function-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
         }
 
         .card-header {
             color: var(--primary-color);
-            margin-bottom: 15px;
+            margin: 0 0 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--secondary-color);
+            font-size: 17px;
         }
 
-        /* 输入控件 */
         .file-input {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            margin: 10px 0;
+            margin: 8px 0;
             font-size: 14px;
         }
 
-        /* 操作按钮 */
         .action-btn {
             background: var(--secondary-color);
             color: white;
-            padding: 10px 20px;
+            padding: 10px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             width: 100%;
-            transition: background 0.3s;
+            transition: background 0.2s;
+            font-size: 14px;
+            margin-top: 8px;
         }
 
         .action-btn:hover {
             background: #2980b9;
         }
 
-        /* 状态提示 */
         .status-info {
-            color: #7f8c8d;
-            font-size: 13px;
+            color: #666;
+            font-size: 12px;
             margin-top: 10px;
             min-height: 20px;
         }
 
-        /* 页脚 */
         .footer {
             position: fixed;
             bottom: 0;
@@ -92,86 +89,347 @@
             color: white;
             text-align: center;
             padding: 12px;
-            font-size: 14px;
-        }
-
-        @media (max-width: 600px) {
-            .grid-container {
-                grid-template-columns: 1fr;
-            }
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
-    <h1 style="text-align:center; color:var(--primary-color); margin-bottom:30px;">
-        全功能文档工具箱
+    <h1 style="text-align:center; color:var(--primary-color); margin:20px 0 30px;">
+        PDF全能工具箱（八大功能）
     </h1>
 
     <div class="grid-container">
-        <!-- PDF 拆分 -->
+        <!-- 1. PDF拆分 -->
         <div class="function-card">
-            <div class="card-header">PDF 拆分</div>
+            <div class="card-header">PDF拆分</div>
             <input type="file" class="file-input" id="splitFile" accept=".pdf">
-            <button class="action-btn" onclick="splitPdf()">开始拆分</button>
+            <button class="action-btn" onclick="handleSplit()">开始拆分</button>
             <div id="splitStatus" class="status-info"></div>
         </div>
 
-        <!-- PDF 合并 -->
+        <!-- 2. PDF合并 -->
         <div class="function-card">
-            <div class="card-header">PDF 合并</div>
+            <div class="card-header">PDF合并</div>
             <input type="file" class="file-input" id="mergeFiles" accept=".pdf" multiple>
-            <button class="action-btn" onclick="mergePdfs()">开始合并</button>
+            <button class="action-btn" onclick="handleMerge()">开始合并</button>
             <div id="mergeStatus" class="status-info"></div>
         </div>
 
-        <!-- Excel 转 PDF -->
+        <!-- 3. Excel转PDF -->
         <div class="function-card">
-            <div class="card-header">Excel 转 PDF</div>
-            <input type="file" class="file-input" id="excelFile" accept=".xlsx, .xls">
-            <button class="action-btn" onclick="convertExcelToPdf()">开始转换</button>
+            <div class="card-header">Excel转PDF</div>
+            <input type="file" class="file-input" id="excelFile" accept=".xlsx,.xls">
+            <button class="action-btn" onclick="handleExcel()">开始转换</button>
             <div id="excelStatus" class="status-info"></div>
         </div>
 
-        <!-- Word 转 PDF -->
+        <!-- 4. Word转PDF -->
         <div class="function-card">
-            <div class="card-header">Word 转 PDF</div>
+            <div class="card-header">Word转PDF</div>
             <input type="file" class="file-input" id="wordFile" accept=".docx">
-            <button class="action-btn" onclick="convertWordToPdf()">开始转换</button>
+            <button class="action-btn" onclick="handleWord()">开始转换</button>
             <div id="wordStatus" class="status-info"></div>
         </div>
 
-        <!-- PDF 压缩 -->
+        <!-- 5. PDF水印 -->
         <div class="function-card">
-            <div class="card-header">PDF 压缩</div>
-            <input type="file" class="file-input" id="compressFile" accept=".pdf">
-            <button class="action-btn" onclick="compressPdf()">开始压缩</button>
-            <div id="compressStatus" class="status-info"></div>
-        </div>
-
-        <!-- 添加水印 -->
-        <div class="function-card">
-            <div class="card-header">PDF 水印</div>
+            <div class="card-header">PDF水印</div>
             <input type="file" class="file-input" id="watermarkFile" accept=".pdf">
             <input type="text" class="file-input" placeholder="水印文字" id="watermarkText">
-            <button class="action-btn" onclick="addWatermark()">添加水印</button>
+            <button class="action-btn" onclick="handleWatermark()">添加水印</button>
             <div id="watermarkStatus" class="status-info"></div>
+        </div>
+
+        <!-- 6. PDF加密 -->
+        <div class="function-card">
+            <div class="card-header">PDF加密</div>
+            <input type="file" class="file-input" id="encryptFile" accept=".pdf">
+            <input type="password" class="file-input" placeholder="输入密码" id="encryptPass">
+            <button class="action-btn" onclick="handleEncrypt()">开始加密</button>
+            <div id="encryptStatus" class="status-info"></div>
+        </div>
+
+        <!-- 7. PDF旋转 -->
+        <div class="function-card">
+            <div class="card-header">PDF旋转</div>
+            <input type="file" class="file-input" id="rotateFile" accept=".pdf">
+            <select class="file-input" id="rotateAngle">
+                <option value="90">顺时针90度</option>
+                <option value="-90">逆时针90度</option>
+                <option value="180">180度</option>
+            </select>
+            <button class="action-btn" onclick="handleRotate()">执行旋转</button>
+            <div id="rotateStatus" class="status-info"></div>
+        </div>
+
+        <!-- 8. PDF书签 -->
+        <div class="function-card">
+            <div class="card-header">PDF书签</div>
+            <input type="file" class="file-input" id="bookmarkFile" accept=".pdf">
+            <input type="text" class="file-input" placeholder="书签名称" id="bookmarkText">
+            <button class="action-btn" onclick="handleBookmark()">添加书签</button>
+            <div id="bookmarkStatus" class="status-info"></div>
         </div>
     </div>
 
     <div class="footer">
-        @逆流锋刀  QQ：418271053 | 基于浏览器技术的本地化处理工具
+        @逆流锋刀 QQ：418271053 | 数据安全本地处理
     </div>
 
-    <!-- 保持原有JavaScript依赖和功能实现 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/mammoth@1.4.8/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- 依赖库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/mammoth/1.4.8/mammoth.browser.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
-        // 保持原有JavaScript功能实现
-        // ...（此处插入之前的所有JavaScript功能代码）...
+        // 状态管理
+        const status = {
+            set: (id, msg, isError = false) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = `${isError ? '❌' : '⏳'} ${msg}`;
+                el.style.color = isError ? '#c0392b' : '#7f8c8d';
+            }
+        };
+
+        // 1. PDF拆分
+        async function handleSplit() {
+            const file = document.getElementById('splitFile').files[0];
+            if (!file) return status.set('splitStatus', '请选择PDF文件', true);
+
+            try {
+                status.set('splitStatus', '处理中...');
+                const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+                
+                for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    const [page] = await newPdf.copyPages(pdfDoc, [i]);
+                    newPdf.addPage(page);
+                    const blob = new Blob([await newPdf.save()], { type: 'application/pdf' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `拆分页_${i+1}.pdf`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                }
+                status.set('splitStatus', '拆分完成');
+            } catch (error) {
+                status.set('splitStatus', error.message, true);
+            }
+        }
+
+        // 2. PDF合并
+        async function handleMerge() {
+            const files = document.getElementById('mergeFiles').files;
+            if (!files.length) return status.set('mergeStatus', '请选择PDF文件', true);
+
+            try {
+                status.set('mergeStatus', '处理中...');
+                const mergedPdf = await PDFLib.PDFDocument.create();
+                
+                for (const file of files) {
+                    const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+                    const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    pages.forEach(page => mergedPdf.addPage(page));
+                }
+                
+                const blob = new Blob([await mergedPdf.save()], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '合并文档.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                status.set('mergeStatus', '合并完成');
+            } catch (error) {
+                status.set('mergeStatus', error.message, true);
+            }
+        }
+
+        // 3. Excel转PDF
+        async function handleExcel() {
+            const file = document.getElementById('excelFile').files[0];
+            if (!file) return status.set('excelStatus', '请选择Excel文件', true);
+
+            try {
+                status.set('excelStatus', '转换中...');
+                const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+                const pdfDoc = await PDFLib.PDFDocument.create();
+
+                for (const sheetName of workbook.SheetNames) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = XLSX.utils.sheet_to_html(workbook.Sheets[sheetName]);
+                    document.body.appendChild(tempDiv);
+                    
+                    const canvas = await html2canvas(tempDiv);
+                    const image = await pdfDoc.embedPng(canvas.toDataURL());
+                    const page = pdfDoc.addPage([image.width, image.height]);
+                    page.drawImage(image, { x: 0, y: 0 });
+                    document.body.removeChild(tempDiv);
+                }
+
+                const blob = new Blob([await pdfDoc.save()], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '转换结果.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                status.set('excelStatus', '转换完成');
+            } catch (error) {
+                status.set('excelStatus', error.message, true);
+            }
+        }
+
+        // 4. Word转PDF
+        async function handleWord() {
+            const file = document.getElementById('wordFile').files[0];
+            if (!file) return status.set('wordStatus', '请选择Word文件', true);
+
+            try {
+                status.set('wordStatus', '转换中...');
+                const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = result.value;
+                document.body.appendChild(tempDiv);
+                
+                await html2pdf().set({
+                    margin: 10,
+                    filename: '转换结果.pdf',
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4' }
+                }).from(tempDiv).save();
+                
+                document.body.removeChild(tempDiv);
+                status.set('wordStatus', '转换完成');
+            } catch (error) {
+                status.set('wordStatus', error.message, true);
+            }
+        }
+
+        // 5. PDF水印
+        async function handleWatermark() {
+            const file = document.getElementById('watermarkFile').files[0];
+            const text = document.getElementById('watermarkText').value;
+            if (!file || !text) return status.set('watermarkStatus', '请选择文件并输入水印文字', true);
+
+            try {
+                status.set('watermarkStatus', '处理中...');
+                const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+                const pages = pdfDoc.getPages();
+                
+                pages.forEach(page => {
+                    const { width, height } = page.getSize();
+                    page.drawText(text, {
+                        x: width/2 - 50,
+                        y: height/2,
+                        opacity: 0.3,
+                        color: PDFLib.rgb(0.7, 0.7, 0.7),
+                        size: 24,
+                        rotate: PDFLib.degrees(-45)
+                    });
+                });
+
+                const blob = new Blob([await pdfDoc.save()], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '带水印文档.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                status.set('watermarkStatus', '水印添加成功');
+            } catch (error) {
+                status.set('watermarkStatus', error.message, true);
+            }
+        }
+
+        // 6. PDF加密
+        async function handleEncrypt() {
+            const file = document.getElementById('encryptFile').files[0];
+            const pass = document.getElementById('encryptPass').value;
+            if (!file || !pass) return status.set('encryptStatus', '请选择文件并输入密码', true);
+
+            try {
+                status.set('encryptStatus', '加密中...');
+                const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+                
+                const permissions = PDFLib.StandardSecurityPermissions.Printing | 
+                                 PDFLib.StandardSecurityPermissions.Copying;
+                
+                pdfDoc.setSecurity({
+                    userPassword: pass,
+                    ownerPassword: 'master_' + pass,
+                    permissions: permissions
+                });
+
+                const blob = new Blob([await pdfDoc.save()], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '加密文档.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                status.set('encryptStatus', '加密完成');
+            } catch (error) {
+                status.set('encryptStatus', error.message, true);
+            }
+        }
+
+        // 7. PDF旋转
+        async function handleRotate() {
+            const file = document.getElementById('rotateFile').files[0];
+            const angle = document.getElementById('rotateAngle').value;
+            if (!file) return status.set('rotateStatus', '请选择PDF文件', true);
+
+            try {
+                status.set('rotateStatus', '处理中...');
+                const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+                const pages = pdfDoc.getPages();
+                
+                pages.forEach(page => {
+                    page.setRotation(PDFLib.degrees(parseInt(angle)));
+                });
+
+                const blob = new Blob([await pdfDoc.save()], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '旋转文档.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                status.set('rotateStatus', '旋转完成');
+            } catch (error) {
+                status.set('rotateStatus', error.message, true);
+            }
+        }
+
+        // 8. PDF书签
+        async function handleBookmark() {
+            const file = document.getElementById('bookmarkFile').files[0];
+            const text = document.getElementById('bookmarkText').value;
+            if (!file || !text) return status.set('bookmarkStatus', '请选择文件并输入书签名称', true);
+
+            try {
+                status.set('bookmarkStatus', '处理中...');
+                const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+                const context = pdfDoc.context;
+                
+                const bookmarkDict = context.obj({
+                    Title: new TextString(text),
+                    Parent: context.obj({}),
+                    Dest: [pdfDoc.getPages()[0], 'Fit']
+                });
+                
+                pdfDoc.catalog.set(PDFLib.Name.of('Outlines'), bookmarkDict);
+
+                const blob = new Blob([await pdfDoc.save()], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '带书签文档.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                status.set('bookmarkStatus', '书签添加成功');
+            } catch (error) {
+                status.set('bookmarkStatus', error.message, true);
+            }
+        }
     </script>
 </body>
 </html>
