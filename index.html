@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>免费PDF分割工具</title>
+    <!-- 引入pdf-lib库（客户端处理） -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+    <h1>PDF分割工具</h1>
+    <input type="file" id="pdfFile" accept=".pdf" />
+    <button onclick="splitPDF()">分割PDF</button>
+    <script>
+        async function splitPDF() {
+            const file = document.getElementById('pdfFile').files[0];
+            const pdfBytes = await file.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+            
+            // 示例：分割第1页
+            const newPdf = await PDFLib.PDFDocument.create();
+            const [page] = await newPdf.copyPages(pdfDoc, [0]);
+            newPdf.addPage(page);
+            
+            const newPdfBytes = await newPdf.save();
+            const blob = new Blob([newPdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '分割后的PDF.pdf';
+            link.click();
+        }
+    </script>
+</body>
+</html>
