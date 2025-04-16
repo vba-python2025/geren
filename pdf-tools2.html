@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF 工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .tool-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        h2 { color: #333; }
+        input[type="file"] { margin: 10px 0; }
+        button { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #status { margin-top: 10px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>PDF 工具</h1>
+
+    <!-- PDF 拆分工具 -->
+    <div class="tool-section">
+        <h2>拆分 PDF</h2>
+        <input type="file" id="splitFile" accept=".pdf">
+        <button onclick="splitPdf()">拆分 PDF</button>
+        <p>将PDF文件拆分为单页文档</p>
+        <div id="splitStatus"></div>
+    </div>
+
+    <!-- PDF 合并工具 -->
+    <div class="tool-section">
+        <h2>合并 PDF</h2>
+        <input type="file" id="mergeFiles" accept=".pdf" multiple>
+        <button onclick="mergePdfs()">合并 PDF</button>
+        <p>将多个PDF文件合并为一个</p>
+        <div id="mergeStatus"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script>
+        // 拆分PDF功能
+        async function splitPdf() {
+            const fileInput = document.getElementById('splitFile');
+            const statusDiv = document.getElementById('splitStatus');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.innerHTML = '请先选择PDF文件';
+                return;
+            }
+
+            statusDiv.innerHTML = '处理中...';
+            
+            try {
+                const file = fileInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                
+                for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    const [page] = await newPdf.copyPages(pdfDoc, [i]);
+                    newPdf.addPage(page);
+                    
+                    const pdfBytes = await newPdf.save();
+                    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `page_${i + 1}.pdf`;
+                    link.click();
+                }
+                
+                statusDiv.innerHTML = '拆分完成！已下载所有单页PDF';
+            } catch (error) {
+                statusDiv.innerHTML = '处理失败: ' + error.message;
+            }
+        }
+
+        // 合并PDF功能
+        async function mergePdfs() {
+            const fileInput = document.getElementById('mergeFiles');
+            const statusDiv = document.getElementById('mergeStatus');
+            
+            if (!fileInput.files.length) {
+                statusDiv.innerHTML = '请选择至少一个PDF文件';
+                return;
+            }
+
+            statusDiv.innerHTML = '处理中...';
+            
+            try {
+                const mergedPdf = await PDFLib.PDFDocument.create();
+                
+                // 遍历所有文件
+                for (const file of fileInput.files) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                    const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    pages.forEach(page => mergedPdf.addPage(page));
+                }
+                
+                const pdfBytes = await mergedPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'merged.pdf';
+                link.click();
+                
+                statusDiv.innerHTML = '合并完成！已下载合并后的PDF';
+            } catch (error) {
+                statusDiv.innerHTML = '处理失败: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
