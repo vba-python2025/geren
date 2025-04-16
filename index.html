@@ -1,32 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>免费PDF分割工具</title>
-    <!-- 引入pdf-lib库（客户端处理） -->
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的工具箱 - 首页</title>
+    <!-- 引入Bootstrap美化 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>PDF分割工具</h1>
-    <input type="file" id="pdfFile" accept=".pdf" />
-    <button onclick="splitPDF()">分割PDF</button>
-    <script>
-        async function splitPDF() {
-            const file = document.getElementById('pdfFile').files[0];
-            const pdfBytes = await file.arrayBuffer();
-            const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
-            
-            // 示例：分割第1页
-            const newPdf = await PDFLib.PDFDocument.create();
-            const [page] = await newPdf.copyPages(pdfDoc, [0]);
-            newPdf.addPage(page);
-            
-            const newPdfBytes = await newPdf.save();
-            const blob = new Blob([newPdfBytes], { type: 'application/pdf' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = '分割后的PDF.pdf';
-            link.click();
-        }
-    </script>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">我的工具箱</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="pdf-tools.html">PDF工具</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主页内容 -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 mx-auto text-center">
+                <h1 class="mb-4">欢迎使用在线工具箱</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <p>支持功能：</p>
+                        <ul class="list-unstyled">
+                            <li><a href="pdf-tools.html" class="btn btn-outline-primary mt-2">PDF分割与合并</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
