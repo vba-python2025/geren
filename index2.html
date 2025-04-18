@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人网站系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 80px auto 40px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid var(--secondary-color);
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .tool-card {
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="#profile">个人介绍</a>
+            <a href="#notice">通知/文章</a>
+            <a href="#policy">相关政策</a>
+            <a href="#tools">实用工具</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 个人介绍 -->
+        <section id="profile" class="card">
+            <div class="profile">
+                <img src="images/avatar.jpg" alt="头像" class="avatar">
+                <div>
+                    <h1>逆流锋刀</h1>
+                    <p>财税| 编程|技术博主</p>
+                    <p>📧 niliufegndao@126.com</p>
+	    <p> QQ：418271053</p>
+                    <div style="margin-top: 1rem;">
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 通知与文章 -->
+        <section id="notice">
+            <div class="card" style="background:#fff3cd;border-left:4px solid #ffc107;">
+                <h2><i class="fas fa-bullhorn"></i> 最新通知</h2>
+                <ul>
+                    <li>2025.04.18 系统维护通知</li>
+                    <li>2025.04.18 网站正式上线</li>
+                </ul>
+            </div>
+
+            <div class="card" style="margin-top:20px;">
+                <h2><i class="fas fa-pen"></i> 最新文章</h2>
+                <div class="article-item">
+                    <h3>个体报税指南</h3>
+                    <p>2024.02.25 | 阅读量 892</p>
+                    <p>个体工商户报税详细步骤...</p>
+                </div>
+            </div>
+       
+        <section id="policy" class="card">
+            <h2><i class="fas fa-scale-balanced"></i> 网站政策</h2>
+            <div style="margin-top: 1rem;">
+                <details>
+                    <summary>隐私政策</summary>
+                    <p>此处是隐私政策内容...</p>
+                </details>
+                <details>
+                    <summary>免责声明</summary>
+                    <p>‌此处是免责声明...</p>
+                </details>
+            </div>
+        </section>
+        </section>
+
+        <!-- 实用工具 -->
+        <section id="tools" class="card">
+            <h2><i class="fas fa-tools"></i> 实用工具</h2>
+            <div class="tools-grid">
+                <a href="tools/pdf.html" class="tool-card">
+                    <i class="fas fa-file-pdf fa-2x"></i>
+                    <h3>PDF工具箱</h3>
+	<p>合并/拆分/加密PDF文件</p>	
+                </a>
+                <a href="tools/invoice.html" class="tool-card">
+                    <i class="fas fa-receipt fa-2x"></i>
+                    <h3>发票处理</h3>
+	<p>统计xml电子发票文件</p>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- 基础JS文件 -->
+    <script>
+        // 平滑滚动功能
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // 图片加载失败处理
+        document.querySelectorAll('img').forEach(img => {
+            img.onerror = function() {
+                this.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

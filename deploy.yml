@@ -1,0 +1,25 @@
+# 在项目根目录创建 .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ] # 监听main分支的推送
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    # 示例：自动生成SEO文件
+    - name: Generate sitemap
+      run: |
+        echo "Generating sitemap..."
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > sitemap.xml
+        find . -name "*.html" >> sitemap.xml
+
+    # 发布到GitHub Pages
+    - uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
