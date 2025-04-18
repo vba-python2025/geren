@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>智能发票处理系统</title>
+    <style>
+        :root {
+            --primary-color: #409EFF;
+            --success-color: #67C23A;
+            --bg-color: #f8f9fa;
+        }
+
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #333;
+            color: white;
+            padding: 12px 30px;
+            text-align: center;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            padding-top: 70px;
+            padding-bottom: 60px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        .upload-section {
+            border: 2px dashed var(--primary-color);
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .custom-upload-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            margin: 10px;
+            border: none;
+        }
+
+        #progress {
+            height: 20px;
+            background: #ebeef5;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        #progressBar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            transition: width 0.3s ease;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .data-table thead {
+            background-color: #f8f9fa;
+        }
+
+        .total-row {
+            background-color: #f1f8ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <a href="/" style="color: white; text-decoration: none;">🏠 主页</a>
+        <span style="float: right">XML发票智能处理系统</span>
+    </div>
+
+    <div class="container">
+        <div class="upload-section">
+            <h2>📁 电子发票处理系统</h2>
+            <label class="custom-upload-btn">
+                <input type="file" id="xmlFiles" accept=".xml" multiple>
+                选择发票文件
+            </label>
+            <button class="custom-upload-btn" onclick="processFiles()">开始处理</button>
+            <span class="file-counter" id="fileCounter"></span>
+            
+            <div id="progress">
+                <div id="progressBar"></div>
+            </div>
+            <p>支持批量上传XML发票文件（可多选）</p>
+        </div>
+        
+        <div id="resultSection" style="display: none;">
+            <h3>📊 发票明细表</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>发票号码</th>
+                        <th>开票日期</th>
+                        <th>买方名称</th>
+                        <th>卖方名称</th>
+                        <th>商品名称</th>
+                        <th>规格型号</th>
+                        <th>数量</th>
+                        <th>单价</th>
+                        <th>金额</th>
+                        <th>税率</th>
+                        <th>税额</th>
+                        <th>价税合计</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+
+            <div id="monthlyStats"></div>
+            <button class="custom-upload-btn" onclick="exportToCSV()">⬇️ 导出为CSV</button>
+        </div>
+    </div>
+
+    <div id="footer">
+        @逆流锋刀 QQ：418271053 | 数据安全本地处理
+    </div>
+
+    <script>
+        let invoiceData = [];
+        let statistics = { totalAmount: 0, totalTax: 0, totalAll: 0 };
+
+        // 文件选择监听
+        document.getElementById('xmlFiles').addEventListener('change', function(e) {
+            const count = e.target.files.length;
+            document.getElementById('fileCounter').textContent = count > 0 
+                ? `已选择 ${count} 个文件` 
+                : '';
+        });
+
+        async function processFiles() {
+            const files = document.getElementById('xmlFiles').files;
+            if (files.length === 0) {
+                alert('请选择至少一个XML文件');
+                return;
+            }
+
+            // 重置数据
+            invoiceData = [];
+            statistics = { totalAmount: 0, totalTax: 0, totalAll: 0 };
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = '0%';
+            
+            for (let i = 0; i < files.length; i++) {
+                await new Promise((resolve) => {
+                    const file = files[i];
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        try {
+                            const parser = new DOMParser();
+                            const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+
+                            // 解析基本信息
+                            const basicInfo = {
+                                invoiceNumber: getXmlValue(xmlDoc, 'InvoiceNumber'),
+                                issueDate: getXmlValue(xmlDoc, 'IssueTime'),
+                                buyer: getXmlValue(xmlDoc, 'BuyerName'),
+                                seller: getXmlValue(xmlDoc, 'SellerName'),
+                                totalAmount: parseFloat(getXmlValue(xmlDoc, 'TotalAmWithoutTax') || 0),
+                                totalTax: parseFloat(getXmlValue(xmlDoc, 'TotalTaxAm') || 0),
+                                totalAll: parseFloat(getXmlValue(xmlDoc, 'TotalTax-includedAmount') || 0)
+                            };
+
+                            // 统计累加
+                            statistics.totalAmount += basicInfo.totalAmount;
+                            statistics.totalTax += basicInfo.totalTax;
+                            statistics.totalAll += basicInfo.totalAll;
+
+                            // 解析商品明细
+                            const items = xmlDoc.getElementsByTagName('IssuItemInformation');
+                            for (const item of items) {
+                                invoiceData.push({
+                                    ...basicInfo,
+                                    itemName: getChildValue(item, 'ItemName'),
+                                    spec: getChildValue(item, 'SpecMod'),
+                                    quantity: parseFloat(getChildValue(item, 'Quantity') || 0),
+                                    unitPrice: parseFloat(getChildValue(item, 'UnPrice') || 0),
+                                    taxRate: (parseFloat(getChildValue(item, 'TaxRate') || 0) * 100).toFixed(2) + '%',
+                                    itemTax: parseFloat(getChildValue(item, 'ComTaxAm') || 0),
+                                    itemTotal: parseFloat(getChildValue(item, 'TotaltaxIncludedAmount') || 0)
+                                });
+                            }
+                        } catch (error) {
+                            console.error('文件解析错误:', error);
+                        }
+                        resolve();
+                    };
+                    reader.readAsText(file);
+                });
+                progressBar.style.width = `${((i + 1) / files.length) * 100}%`;
+            }
+
+            showResults();
+            generateMonthlyReport();
+        }
+
+        function getXmlValue(xmlDoc, tagName) {
+            const node = xmlDoc.getElementsByTagName(tagName)[0];
+            return node ? node.textContent : '';
+        }
+
+        function getChildValue(parent, tagName) {
+            const node = parent.getElementsByTagName(tagName)[0];
+            return node ? node.textContent : '';
+        }
+
+        function showResults() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            invoiceData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.invoiceNumber}</td>
+                    <td>${item.issueDate}</td>
+                    <td>${item.buyer}</td>
+                    <td>${item.seller}</td>
+                    <td>${item.itemName}</td>
+                    <td>${item.spec}</td>
+                    <td>${item.quantity.toFixed(2)}</td>
+                    <td>${item.unitPrice.toFixed(2)}</td>
+                    <td>${item.totalAmount.toFixed(2)}</td>
+                    <td>${item.taxRate}</td>
+                    <td>${item.totalTax.toFixed(2)}</td>
+                    <td>${item.totalAll.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('resultSection').style.display = 'block';
+        }
+
+        function generateMonthlyReport() {
+            const monthlyData = {};
+
+            invoiceData.forEach(item => {
+                const month = item.issueDate.substring(0, 7).replace("-", "年") + "月";
+                if (!monthlyData[month]) {
+                    monthlyData[month] = {
+                        items: {},
+                        totalAmount: 0,
+                        totalTax: 0,
+                        totalAll: 0,
+                        invoices: new Set()
+                    };
+                }
+                
+                monthlyData[month].invoices.add(item.invoiceNumber);
+                monthlyData[month].totalAmount += item.totalAmount;
+                monthlyData[month].totalTax += item.totalTax;
+                monthlyData[month].totalAll += item.totalAll;
+
+                if (!monthlyData[month].items[item.itemName]) {
+                    monthlyData[month].items[item.itemName] = {
+                        amount: 0,
+                        tax: 0,
+                        total: 0,
+                        count: 0
+                    };
+                }
+                
+                const itemData = monthlyData[month].items[item.itemName];
+                itemData.amount += item.totalAmount;
+                itemData.tax += item.totalTax;
+                itemData.total += item.totalAll;
+                itemData.count++;
+            });
+
+            const statsDiv = document.getElementById('monthlyStats');
+            statsDiv.innerHTML = `
+                <h3>📅 月度统计报表</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">月份</th>
+                            <th rowspan="2">商品名称</th>
+                            <th colspan="3">金额统计</th>
+                            <th rowspan="2">开票次数</th>
+                        </tr>
+                        <tr>
+                            <th>金额合计</th>
+                            <th>税额合计</th>
+                            <th>价税合计</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(monthlyData).map(([month, data]) => `
+                            <tr class="total-row">
+                                <td>${month}</td>
+                                <td colspan="5">本月发票数量：${data.invoices.size}</td>
+                            </tr>
+                            ${Object.entries(data.items).map(([itemName, item]) => `
+                                <tr>
+                                    <td></td>
+                                    <td>${itemName}</td>
+                                    <td>${item.amount.toFixed(2)}</td>
+                                    <td>${item.tax.toFixed(2)}</td>
+                                    <td>${item.total.toFixed(2)}</td>
+                                    <td>${item.count}</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="total-row">
+                                <td colspan="2">本月合计</td>
+                                <td>${data.totalAmount.toFixed(2)}</td>
+                                <td>${data.totalTax.toFixed(2)}</td>
+                                <td>${data.totalAll.toFixed(2)}</td>
+                                <td>${data.invoices.size}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function exportToCSV() {
+            const csvContent = [
+                ['发票号码', '开票日期', '买方名称', '卖方名称', '商品名称', '规格型号', '数量', '单价', '金额', '税率', '税额', '价税合计'].join(','),
+                ...invoiceData.map(item => [
+                    item.invoiceNumber,
+                    item.issueDate,
+                    `"${item.buyer}"`,
+                    `"${item.seller}"`,
+                    `"${item.itemName}"`,
+                    item.spec,
+                    item.quantity.toFixed(2),
+                    item.unitPrice.toFixed(2),
+                    item.totalAmount.toFixed(2),
+                    item.taxRate,
+                    item.totalTax.toFixed(2),
+                    item.totalAll.toFixed(2)
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `发票明细_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>

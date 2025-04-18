@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>专业印章生成器 - 正式版</title>
+    <style>
+        :root {
+            --primary-color: #c33;
+            --background-color: #f5f5f5;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 60px 20px 40px;
+            background: var(--background-color);
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .nav-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: #f8f8f8;
+        }
+
+        .tool-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        input, select, button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option.selected {
+            transform: scale(1.1);
+            border-color: #666;
+        }
+
+        #preview {
+            text-align: center;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        canvas {
+            max-width: 90%;
+            max-height: 400px;
+            background: 
+                linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .custom-text-input {
+            display: none;
+            margin-top: 8px;
+        }
+
+        .footer-tag {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <ul class="nav-links">
+            <li><a href="../index.html">主页</a></li>
+            <li><a href="pdf-tools.html">PDF工具</a></li>
+        </ul>
+    </nav>
+
+    <div class="tool-container">
+        <h1 style="margin:0 0 1.5rem 0;font-size:1.5rem;">专业印章生成器</h1>
+        
+        <div class="controls-grid">
+            <div class="control-group">
+                <label>印章形状：</label>
+                <select id="stamp-shape">
+                    <option value="circle">圆形</option>
+                    <option value="square">方形</option>
+                    <option value="ellipse">椭圆</option>
+                    <option value="triangle">三角形</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>主文字：</label>
+                <input type="text" id="main-text" value="某某科技有限公司" maxlength="20">
+            </div>
+
+            <div class="control-group">
+                <label>文字半径：</label>
+                <input type="range" id="text-radius" min="50" max="95" value="75" step="5">
+            </div>
+
+            <div class="control-group">
+                <label>底部文字：</label>
+                <select id="sub-text">
+                    <option value="">无底部文字</option>
+                    <option value="财务专用章" selected>财务专用章</option>
+                    <option value="发票专用章">发票专用章</option>
+                    <option value="合同专用章">合同专用章</option>
+                    <option value="custom">自定义文字</option>
+                </select>
+                <input type="text" id="custom-subtext" class="custom-text-input" placeholder="输入自定义文字">
+            </div>
+
+            <div class="control-group">
+                <label>底部文字大小：</label>
+                <input type="range" id="subtext-size" min="12" max="36" value="20">
+            </div>
+
+            <div class="control-group">
+                <label>中心图案：</label>
+                <select id="center-symbol">
+                    <option value="none">无图案</option>
+                    <option value="star" selected>五角星</option>
+                    <option value="cross">十字星</option>
+                    <option value="circle">圆形</option>
+                    <option value="triangle">三角形</option>
+                    <option value="custom-text">自定义文字</option>
+                </select>
+                <input type="text" id="custom-center-text" class="custom-text-input" placeholder="输入中心文字">
+            </div>
+
+            <div class="control-group">
+                <label>颜色选择：</label>
+                <div class="color-picker">
+                    <div class="color-option selected" style="background: #c00" data-color="#c00"></div>
+                    <div class="color-option" style="background: #00c" data-color="#00c"></div>
+                    <div class="color-option" style="background: #090" data-color="#090"></div>
+                    <div class="color-option" style="background: #000" data-color="#000"></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>印章尺寸：</label>
+                <input type="range" id="stamp-size" min="100" max="500" value="200">
+            </div>
+
+            <div class="control-group">
+                <button onclick="downloadStamp()">下载印章</button>
+            </div>
+        </div>
+
+        <div id="preview">
+            <canvas id="stamp-canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="footer-tag">
+        @逆流锋刀 QQ：418271053 | 数据安全本地处理
+    </div>
+
+    <script>
+        const config = {
+            size: 200,
+            color: '#c00',
+            shape: 'circle',
+            mainText: '某某科技有限公司',
+            subText: '财务专用章',
+            centerSymbol: 'star',
+            textRadius: 75,
+            subtextSize: 20,
+            centerText: ''
+        };
+
+        const canvas = document.getElementById('stamp-canvas');
+        const ctx = canvas.getContext('2d');
+        const elements = {
+            shape: document.getElementById('stamp-shape'),
+            mainText: document.getElementById('main-text'),
+            subText: document.getElementById('sub-text'),
+            customSubtext: document.getElementById('custom-subtext'),
+            centerSymbol: document.getElementById('center-symbol'),
+            customCenterText: document.getElementById('custom-center-text'),
+            textRadius: document.getElementById('text-radius'),
+            subtextSize: document.getElementById('subtext-size'),
+            size: document.getElementById('stamp-size')
+        };
+
+        // 事件监听
+        document.querySelectorAll('.color-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.color-option').forEach(e => e.classList.remove('selected'));
+                btn.classList.add('selected');
+                generateStamp();
+            });
+        });
+
+        elements.subText.addEventListener('change', function() {
+            elements.customSubtext.style.display = this.value === 'custom' ? 'block' : 'none';
+            generateStamp();
+        });
+
+        elements.centerSymbol.addEventListener('change', function() {
+            elements.customCenterText.style.display = this.value === 'custom-text' ? 'block' : 'none';
+            generateStamp();
+        });
+
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', generateStamp);
+        });
+
+        function generateStamp() {
+            updateConfig();
+            resetCanvas();
+            drawBaseShape();
+            drawCenterSymbol();
+            drawMainText();
+            drawSubText();
+        }
+
+        function updateConfig() {
+            config.size = parseInt(elements.size.value);
+            config.color = document.querySelector('.color-option.selected').dataset.color;
+            config.shape = elements.shape.value;
+            config.mainText = elements.mainText.value;
+            config.textRadius = parseInt(elements.textRadius.value);
+            config.subtextSize = parseInt(elements.subtextSize.value);
+            config.centerSymbol = elements.centerSymbol.value;
+            config.centerText = elements.customCenterText.value;
+            
+            const subTextType = elements.subText.value;
+            config.subText = subTextType === 'custom' ? 
+                elements.customSubtext.value : 
+                subTextType;
+        }
+
+        function resetCanvas() {
+            canvas.width = config.size;
+            canvas.height = config.shape === 'ellipse' ? config.size * 0.66 : config.size;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawBaseShape() {
+            ctx.save();
+            ctx.strokeStyle = config.color;
+            ctx.lineWidth = 3;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const padding = 6;
+
+            switch(config.shape) {
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, Math.min(centerX, centerY) - padding, 0, Math.PI*2);
+                    break;
+                case 'square':
+                    const squareSize = Math.min(canvas.width, canvas.height) - padding*2;
+                    ctx.rect(
+                        centerX - squareSize/2,
+                        centerY - squareSize/2,
+                        squareSize,
+                        squareSize
+                    );
+                    break;
+                case 'ellipse':
+                    const radiusX = (canvas.width/2) - padding;
+                    const radiusY = (canvas.height/2) - padding;
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI*2);
+                    break;
+                case 'triangle':
+                    const triangleHeight = canvas.height - padding*2;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, padding);
+                    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+                    ctx.lineTo(padding, canvas.height - padding);
+                    ctx.closePath();
+                    break;
+            }
+
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawCenterSymbol() {
+            if(config.centerSymbol === 'none') return;
+            
+            ctx.save();
+            ctx.fillStyle = config.color;
+            ctx.strokeStyle = config.color;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const symbolSize = Math.min(canvas.width, canvas.height) / 5;
+
+            switch(config.centerSymbol) {
+                case 'star':
+                    drawFivePointedStar(centerX, centerY, symbolSize);
+                    break;
+                case 'cross':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - symbolSize, centerY);
+                    ctx.lineTo(centerX + symbolSize, centerY);
+                    ctx.moveTo(centerX, centerY - symbolSize);
+                    ctx.lineTo(centerX, centerY + symbolSize);
+                    ctx.stroke();
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, symbolSize/2, 0, Math.PI*2);
+                    ctx.fill();
+                    break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - symbolSize);
+                    ctx.lineTo(centerX + symbolSize, centerY + symbolSize);
+                    ctx.lineTo(centerX - symbolSize, centerY + symbolSize);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+                case 'custom-text':
+                    ctx.font = `bold ${symbolSize * 0.7}px FangSong, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(config.centerText, centerX, centerY);
+                    break;
+            }
+            ctx.restore();
+        }
+
+        function drawMainText() {
+            ctx.save();
+            ctx.fillStyle = config.color;
+            ctx.font = `${calcFontSize()}px SimSun, serif`;
+            ctx.textAlign = 'center';
+            
+            const radius = (Math.min(canvas.width, canvas.height) / 2) * (config.textRadius / 100);
+            arrangeCircularText(config.mainText, radius - 8);
+            ctx.restore();
+        }
+
+        function calcFontSize() {
+            return Math.min(config.size / 12, 28) * (config.textRadius / 75);
+        }
+
+        function arrangeCircularText(text, radius) {
+            const chars = text.split('');
+            const totalAngle = Math.PI * 0.9; // 160度对称
+            const angleStep = totalAngle / (chars.length - 1);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            chars.forEach((char, index) => {
+                const angle = -totalAngle/2 + angleStep * index;
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle);
+                ctx.translate(0, -radius);
+                ctx.rotate(-angle);
+                ctx.fillText(char, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        function drawFivePointedStar(cx, cy, size) {
+            const R = size;
+            const r = R * 0.382; // 标准比例
+            const angles = [];
+            
+            for(let i = 0; i < 5; i++) {
+                angles.push({
+                    x: cx + R * Math.cos((18 + i*72)*Math.PI/180),
+                    y: cy - R * Math.sin((18 + i*72)*Math.PI/180)
+                });
+                angles.push({
+                    x: cx + r * Math.cos((54 + i*72)*Math.PI/180),
+                    y: cy - r * Math.sin((54 + i*72)*Math.PI/180)
+                });
+            }
+
+            ctx.beginPath();
+            angles.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawSubText() {
+            if(!config.subText) return;
+            
+            ctx.save();
+            ctx.fillStyle = config.color;
+            ctx.font = `bold ${config.subtextSize}px SimSun, serif`;
+            ctx.textAlign = 'center';
+            
+            const yPos = canvas.height - (config.subtextSize * 1.2);
+            ctx.fillText(config.subText, canvas.width/2, yPos);
+            ctx.restore();
+        }
+
+        function downloadStamp() {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            const link = document.createElement('a');
+            link.download = `stamp-${Date.now()}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        generateStamp();
+    </script>
+</body>
+</html>
